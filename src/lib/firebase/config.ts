@@ -16,9 +16,13 @@ let db: ReturnType<typeof getFirestore>;
 
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
+  // Using initializeFirestore with experimentalForceLongPolling to handle
+  // potential WebSocket connectivity issues in restricted environments.
   db = initializeFirestore(app, { experimentalForceLongPolling: true });
 } else {
   app = getApp();
+  // We use getFirestore. If initializeFirestore was already called, 
+  // it returns the same instance with previous settings.
   db = getFirestore(app);
 }
 

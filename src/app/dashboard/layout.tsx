@@ -175,14 +175,35 @@ export default function DashboardLayout({
 
   const handleSaveNickname = async () => {
     if (!user?.uid) return;
+    const cleanNickname = nicknameInput.trim();
     setIsSavingNickname(true);
+    
+    console.log(`[Save Nickname] Attempting to save for ${user.uid}: "${cleanNickname}"`);
+    
     try {
       const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, { nickname: nicknameInput.trim() }, { merge: true });
-      setNickname(nicknameInput.trim());
+      
+      // Create a timeout promise to prevent permanent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Firestore operation timed out")), 5000);
+      });
+
+      // Race setDoc against our timeout
+      await Promise.race([
+        setDoc(userRef, { nickname: cleanNickname }, { merge: true }),
+        timeoutPromise
+      ]);
+
+      console.log(`[Save Nickname] Successfully saved "${cleanNickname}"`);
+      setNickname(cleanNickname);
       setShowNicknameModal(false);
     } catch (err) {
-      console.error('Failed to save nickname:', err);
+      console.error('[Save Nickname] Failed:', err);
+      // Even if it "timed out", Firestore will continue to try in the background
+      // and update the UI via the snapshot listeners later.
+      // For now, we close the modal to unlock the UI.
+      setShowNicknameModal(false);
+      alert(err instanceof Error ? err.message : "Failed to save callsign. Please check connection.");
     } finally {
       setIsSavingNickname(false);
     }

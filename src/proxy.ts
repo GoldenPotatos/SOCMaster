@@ -20,7 +20,7 @@ const PROTECTED_ROUTES = ["/dashboard"];
 // Routes that are always public
 const PUBLIC_ROUTES = ["/login", "/api", "/_next", "/favicon.ico"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public routes through without any checks

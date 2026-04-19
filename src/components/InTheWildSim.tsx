@@ -13,25 +13,22 @@ export default function InTheWildSim({ headline, onClose }: InTheWildSimProps) {
 
 
   return (
-    <div className={`flex-1 flex flex-col items-center justify-center p-8 space-y-8 animate-in fade-in duration-500 min-h-[400px] ${
-      isCyberpunk ? 'bg-[#080010]' : 'bg-neutral-900/20'
-    }`}>
+    <div className={`flex-1 flex flex-col items-center justify-center p-8 space-y-8 animate-in fade-in duration-500 min-h-[400px] ${isCyberpunk ? 'bg-[#080010]' : 'bg-neutral-900/20'
+      }`}>
       <div className="text-center max-w-2xl">
-        <div className={`text-[10px] font-bold uppercase tracking-[0.4em] mb-4 ${
-          isCyberpunk ? 'text-[#ff00ff]' : 'text-emerald-500'
-        }`}>
+        <div className={`text-[10px] font-bold uppercase tracking-[0.4em] mb-4 ${isCyberpunk ? 'text-[#ff00ff]' : 'text-emerald-500'
+          }`}>
           System Status: Analyzing Threat Intelligence
         </div>
-        
+
         <h1 className="text-2xl font-bold hm-logo-text tracking-widest uppercase mb-6">
           In-the-Wild Simulation
         </h1>
 
-        <div className={`p-8 border font-mono text-sm space-y-4 mb-8 ${
-          isCyberpunk 
-            ? 'hm-border-cyan bg-[rgba(26,11,46,0.95)] shadow-[0_0_20px_rgba(0,212,255,0.1)]' 
+        <div className={`p-8 border font-mono text-sm space-y-4 mb-8 ${isCyberpunk
+            ? 'hm-border-cyan bg-[rgba(26,11,46,0.95)] shadow-[0_0_20px_rgba(0,212,255,0.1)]'
             : 'border-neutral-800 bg-neutral-950/80 rounded-2xl'
-        }`}>
+          }`}>
           <p className={isCyberpunk ? 'text-[#00ffff]' : 'text-emerald-400'}>
             GENERATING SCENARIO BASED ON:
           </p>
@@ -48,11 +45,10 @@ export default function InTheWildSim({ headline, onClose }: InTheWildSimProps) {
 
         <button
           onClick={onClose}
-          className={`px-12 py-3 border font-bold uppercase tracking-[0.2em] transition-all ${
-            isCyberpunk
+          className={`px-12 py-3 border font-bold uppercase tracking-[0.2em] transition-all ${isCyberpunk
               ? 'border-[#ff00ff] text-[#ff00ff] hover:bg-[#ff00ff] hover:text-black shadow-[0_0_15px_rgba(255,0,255,0.2)]'
               : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 rounded-xl'
-          }`}
+            }`}
           className="text-[#9060d0]"
         >
           [ ABORT_SIMULATION ]
