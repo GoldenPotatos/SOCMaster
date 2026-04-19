@@ -49,7 +49,6 @@ export default function InTheWildSim({ headline, onClose }: InTheWildSimProps) {
               ? 'border-[#ff00ff] text-[#ff00ff] hover:bg-[#ff00ff] hover:text-black shadow-[0_0_15px_rgba(255,0,255,0.2)]'
               : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 rounded-xl'
             }`}
-          className="text-[#9060d0]"
         >
           [ ABORT_SIMULATION ]
         </button>
