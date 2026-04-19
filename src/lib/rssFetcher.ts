@@ -58,10 +58,32 @@ export const AVAILABLE_SOURCES: NewsSource[] = [
   }
 ];
 
+// Sources that are blocked by CORS, government firewalls, or Cloudflare and must
+// be fetched server-side via our /api/proxy-rss route with spoofed browser headers.
+const PROXIED_SOURCE_IDS = new Set(['incd', 'erez_dasa']);
+
+// Base URL for internal API calls (server-side requires absolute URL)
+const INTERNAL_API_BASE =
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
+/**
+ * Returns the URL to use when fetching an RSS feed.
+ * Blocked sources are routed through our server-side proxy.
+ */
+function resolveRssUrl(source: NewsSource, forceProxy = false): string {
+  if (forceProxy || PROXIED_SOURCE_IDS.has(source.id)) {
+    return `${INTERNAL_API_BASE}/api/proxy-rss?url=${encodeURIComponent(source.url)}`;
+  }
+  return source.url;
+}
+
+// rss-parser instance with spoofed browser headers for direct fetches
 const parser = new Parser({
   headers: {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'application/rss+xml, application/xml;q=0.9, */*;q=0.8',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Accept': 'application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.7',
+    'Accept-Language': 'en-US,en;q=0.9',
     'Referer': 'https://www.google.com/'
   }
 });
@@ -101,14 +123,12 @@ export async function getLatestCyberNews(selectedSourceIds: string[], customSour
 
   const feedPromises = sourcesToFetch.map(async (source) => {
     try {
-      // Check if it's a Reddit source
-      // Custom Reddit sources might have urls like 'reddit:netsec' or just be a reddit.com link
+      // Reddit sources use their own JSON API
       const isReddit = REDDIT_SOURCE_IDS.includes(source.id) || 
                        source.url.includes('reddit.com') || 
                        source.url.startsWith('reddit:');
       
       if (isReddit) {
-        // Normalize Reddit URL if it's just a subreddit name or special string
         let fetchUrl = source.url;
         if (fetchUrl.startsWith('reddit:')) {
           const sub = fetchUrl.replace('reddit:', '');
@@ -122,13 +142,16 @@ export async function getLatestCyberNews(selectedSourceIds: string[], customSour
         return items;
       }
 
+      // For all other RSS sources, resolve through proxy if needed
+      const fetchUrl = resolveRssUrl(source);
       let feed;
       try {
-        feed = await parser.parseURL(source.url);
+        feed = await parser.parseURL(fetchUrl);
       } catch (e) {
+        // Fallback: if the erez_dasa primary URL fails, try the alternate rsshub path via proxy
         if (source.id === 'erez_dasa') {
           console.warn(`Primary feed for ${source.name} failed, trying fallback...`);
-          const fallbackUrl = 'https://rsshub.app/telegram/channel/CyberSecurityIL?filterout=JOIN';
+          const fallbackUrl = resolveRssUrl({ ...source, url: 'https://rsshub.app/telegram/channel/CyberSecurityIL?filterout=JOIN' }, true);
           feed = await parser.parseURL(fallbackUrl);
         } else {
           throw e;
@@ -148,7 +171,7 @@ export async function getLatestCyberNews(selectedSourceIds: string[], customSour
       }));
     } catch (error: any) {
       console.error(`Error fetching RSS from ${source.name} (${source.url}):`, error);
-      sourceStatuses[source.id] = error.status || (error.message.includes('403') ? 403 : 500);
+      sourceStatuses[source.id] = error.status || (error.message?.includes('403') ? 403 : 500);
       return [];
     }
   });
@@ -165,3 +188,4 @@ export async function getLatestCyberNews(selectedSourceIds: string[], customSour
 
   return { items: sortedItems, sourceStatuses };
 }
+

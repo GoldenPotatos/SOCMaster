@@ -55,40 +55,73 @@ export default function CICenter({ onInitializeSimulation }: CICenterProps) {
   const [isSimLoading, setIsSimLoading] = useState(false);
   const simScrollRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
+  // Tracks whether selectedSources has been populated from localStorage yet.
+  // Prevents fetchNews from firing on mount with an empty [] before the
+  // localStorage useEffect has run and set the real sources.
+  const sourcesReady = useRef(false);
   const simAbortController = useRef<AbortController | null>(null);
 
-  // Load sources from localStorage
+  // Load sources from localStorage on mount, then mark them ready.
+  // We call fetchNews() directly here (not via the second effect) so that the
+  // initial fetch always uses the resolved sources, not the empty default state.
   useEffect(() => {
     const saved = localStorage.getItem('ci_selected_sources');
     const savedCustom = localStorage.getItem('ci_custom_sources');
-    
+
+    let resolvedSources: string[];
     if (saved) {
       try {
-        setSelectedSources(JSON.parse(saved));
+        resolvedSources = JSON.parse(saved);
       } catch (e) {
-        setSelectedSources(AVAILABLE_SOURCES.map(s => s.id));
+        resolvedSources = AVAILABLE_SOURCES.map(s => s.id);
       }
     } else {
-      setSelectedSources(AVAILABLE_SOURCES.map(s => s.id));
+      resolvedSources = AVAILABLE_SOURCES.map(s => s.id);
     }
 
+    let resolvedCustom: { id: string; name: string; url: string }[] = [];
     if (savedCustom) {
       try {
-        setCustomSources(JSON.parse(savedCustom));
+        resolvedCustom = JSON.parse(savedCustom);
       } catch (e) {
-        setCustomSources([]);
+        resolvedCustom = [];
       }
     }
+
+    setSelectedSources(resolvedSources);
+    setCustomSources(resolvedCustom);
+
+    // Mark sources as ready and trigger the initial fetch immediately with
+    // the resolved values so we don't wait for a re-render + state update.
+    sourcesReady.current = true;
+    fetchNewsWithSources(resolvedSources, resolvedCustom);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Save sources to localStorage
+  // Re-fetch whenever the user toggles sources AFTER the initial load.
   useEffect(() => {
-    if (selectedSources.length > 0) {
-      localStorage.setItem('ci_selected_sources', JSON.stringify(selectedSources));
-    }
+    if (!sourcesReady.current) return; // Skip the effect fired by the initializer above
+    localStorage.setItem('ci_selected_sources', JSON.stringify(selectedSources));
     localStorage.setItem('ci_custom_sources', JSON.stringify(customSources));
     fetchNews();
   }, [selectedSources, customSources]);
+
+  const fetchNewsWithSources = async (sources: string[], custom: { id: string; name: string; url: string }[]) => {
+    setIsFeedLoading(true);
+    try {
+      const sourcesQuery = sources.join(',');
+      const customQuery = encodeURIComponent(JSON.stringify(custom));
+      const response = await fetch(`/api/news?sources=${sourcesQuery}&customSources=${customQuery}`);
+      if (!response.ok) throw new Error('Failed to fetch from proxy');
+      const data = await response.json();
+      setNews(data.items || []);
+      setSourceStatuses(data.sourceStatuses || {});
+    } catch (err) {
+      console.error("Failed to fetch news:", err);
+    } finally {
+      setIsFeedLoading(false);
+    }
+  };
 
   const fetchNews = async () => {
     setIsFeedLoading(true);
