@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+:root {
+  --background: #080010;
+  --foreground: #00ffff;
+  --hm-magenta:  #ff00ff;
+  --hm-cyan:     #00ffff;
+  --hm-purple:   #2a004f;
+  --hm-deep:     #060010;
+  --hm-card-bg:  rgba(26, 11, 46, 0.95);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans:    var(--font-orbitron), sans-serif;
+  --font-mono:    var(--font-orbitron), monospace;
+  --font-display: var(--font-orbitron), sans-serif;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-orbitron), sans-serif;
+  font-weight: 600;
+}
+
+/* ─── Hackerman Background — all static, zero animation ─── */
+
+/* Sky: simple solid gradient, no blur, no shadow */
+.hm-sky {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  /* Simple 2-stop gradient — cheap single paint */
+  background: linear-gradient(to bottom, #000000 0%, #120422 100%);
+}
+
+/* Horizon glow line — single gradient, no shadow */
+.hm-horizon {
+  position: fixed;
+  bottom: 38%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  z-index: -1;
+  background: linear-gradient(to right, transparent 0%, #ff00ff 30%, #00ffff 50%, #ff00ff 70%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Floor container */
+.hm-floor-wrap {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 38%;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: #060010;
+}
+
+/* SVG floor — rendered as background-image data URI.
+   This is a pre-rasterized vector, zero JS, zero composite layers.
+   Single 100x60 tile with magenta horizontal + vertical lines. */
+.hm-floor {
+  position: absolute;
+  bottom: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  transform: perspective(400px) rotateX(55deg);
+  transform-origin: bottom center;
+  /* SVG grid as data URI — static, no recalculation */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='60'%3E%3Crect width='80' height='60' fill='none'/%3E%3Cline x1='0' y1='0' x2='80' y2='0' stroke='%23ff00ff' stroke-width='1' opacity='0.7'/%3E%3Cline x1='0' y1='0' x2='0' y2='60' stroke='%23ff00ff' stroke-width='1' opacity='0.7'/%3E%3C/svg%3E");
+  background-size: 80px 60px;
+  background-repeat: repeat;
+}
+
+/* ─── Logo: chrome gradient text, no drop-shadow filter ─── */
+.hm-logo-text {
+  font-family: var(--font-orbitron), sans-serif;
+  letter-spacing: 0.12em;
+  font-weight: 800;
+  /* Cheap gradient text — no filter, no shadow */
+  background: linear-gradient(to bottom, #ffffff 0%, #c8aaff 50%, #9060d0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Cards: solid bg, NO backdrop-filter ─────────────── */
+.hm-card {
+  background: var(--hm-card-bg);
+  border: 1px solid #ff00ff;
+  border-radius: 0;
+}
+
+.hm-card-cyan {
+  background: var(--hm-card-bg);
+  border: 1px solid #00ffff;
+  border-radius: 0;
+}
+
+/* Double-border neon hack: outer outline gives depth with near-zero GPU cost */
+.hm-border-magenta {
+  border: 1px solid #ff00ff;
+  outline: 1px solid rgba(255, 0, 255, 0.3);
+  outline-offset: 1px;
+}
+
+.hm-border-cyan {
+  border: 1px solid #00ffff;
+  outline: 1px solid rgba(0, 212, 255, 0.3);
+  outline-offset: 1px;
+}
+
+.hm-border-yellow {
+  border: 1px solid #fcee0a;
+  outline: 1px solid rgba(252, 238, 10, 0.3);
+  outline-offset: 1px;
+}
