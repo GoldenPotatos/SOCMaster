@@ -635,56 +635,44 @@ export default function CICenter({ onInitializeSimulation, showSettings, setShow
           ) : (
             news.map((n) => (
               <div key={n.id}
-                className={`relative overflow-hidden transition-all duration-300 p-5 group ${
+                className={`w-fit h-fit px-[24px] py-[16px] rounded-[10px] flex flex-col gap-4 ${
                   isCyberpunk
-                    ? 'bg-[rgba(12,0,28,0.97)]'
-                    : 'bg-[#141414] border border-white/[0.05] rounded-[20px] hover:border-white/10 hover:bg-[#171717]'
+                    ? 'bg-[rgba(12,0,28,0.97)] border-l-[3px] border-[#00ffff] border-t border-r border-b border-[#ff00ff]/25'
+                    : 'bg-[#141414]'
                 }`}
-                style={isCyberpunk ? {
-                  borderLeft: `3px solid #00ffff`,
-                  borderTop: '1px solid rgba(255,0,255,0.25)',
-                  borderRight: '1px solid rgba(255,0,255,0.25)',
-                  borderBottom: '1px solid rgba(255,0,255,0.25)',
-                } : {}}>
-
-                {/* Source + Live badge */}
-                <div className="flex justify-between items-center mb-3">
-                  <div className="flex items-center gap-2">
-                    <svg width="16" height="16" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-35 shrink-0">
-                      <path d="M13.3333 5.5L18.3333 10.5L13.3333 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M6.66667 5.5L1.66667 10.5L6.66667 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M11.6667 3.83331L8.33333 17.1666" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span className={`text-[12px] font-roboto ${isCyberpunk ? 'text-[#9060d0]' : 'text-white/35'}`}>
+              >
+                {/* First div */}
+                <div className="w-fit h-fit flex flex-col gap-2">
+                  {/* 1st div */}
+                  <div className="w-fit h-fit flex items-center gap-2">
+                    <div className="text-white/15">
+                      <svg width="16" height="13" viewBox="0 0 16 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.82014 0.0318365C9.39511 -0.0925519 8.95257 0.158763 8.83006 0.590313L5.62981 11.9629C5.50731 12.3945 5.75482 12.8438 6.17986 12.9682C6.60489 13.0926 7.04742 12.8412 7.16994 12.4097L10.3702 1.03709C10.4927 0.605542 10.2452 0.156225 9.82014 0.0318365ZM11.8353 3.08061C11.5228 3.39792 11.5228 3.91324 11.8353 4.23056L14.068 6.5L11.8328 8.76944C11.5203 9.08676 11.5203 9.60208 11.8328 9.91939C12.1453 10.2367 12.6529 10.2367 12.9654 9.91939L15.7656 7.07624C16.0781 6.75893 16.0781 6.24361 15.7656 5.92629L12.9654 3.08314C12.6529 2.76583 12.1453 2.76583 11.8328 3.08314L11.8353 3.08061ZM4.1672 3.08061C3.85468 2.76329 3.34714 2.76329 3.03461 3.08061L0.234392 5.92376C-0.0781307 6.24107 -0.0781307 6.75639 0.234392 7.07371L3.03461 9.91685C3.34714 10.2342 3.85468 10.2342 4.1672 9.91685C4.47973 9.59954 4.47972 9.08422 4.1672 8.7669L1.93202 6.5L4.1672 4.23056C4.47972 3.91324 4.47972 3.39792 4.1672 3.08061Z" fill="currentColor"/>
+                      </svg>
+                    </div>
+                    <div className="text-white/[0.35] font-roboto font-normal text-sm">
                       {n.sourceName}
-                    </span>
+                    </div>
                   </div>
-                  <span className={`text-[9px] font-bold tracking-widest px-2 py-0.5 rounded-[4px] border ${
-                    isCyberpunk
-                      ? 'border-[#00ffff]/40 text-[#00ffff] animate-pulse'
-                      : 'border-[#00FF67]/40 text-[#00FF67] bg-[#00FF67]/5 animate-pulse'
-                  }`}>
-                    LIVE
-                  </span>
+
+                  {/* 2nd div */}
+                  <div className="w-fit h-fit flex flex-col gap-1">
+                    <div className="w-fit h-fit">
+                      <div dir="auto" className={`text-white font-orbitron tracking-[0.05em] leading-snug ${isCyberpunk ? 'text-[#e8d5ff]' : 'text-white'}`}>
+                        {n.title}
+                      </div>
+                    </div>
+                    <div className="w-fit h-fit mt-1">
+                      <div dir="auto" className={`text-white/50 font-roboto font-normal tracking-[0.01em] line-clamp-2 ${isCyberpunk ? 'text-[#9060d0]' : 'text-white/50'}`}>
+                        {n.summary}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Title */}
-                <h3 dir="auto" className={`font-orbitron font-semibold mb-2 leading-snug ${
-                  isCyberpunk ? 'text-[11px] text-[#e8d5ff]' : 'text-[16px] text-white'
-                }`}>
-                  {n.title}
-                </h3>
-
-                {/* Summary */}
-                <p dir="auto" className={`text-[14px] font-roboto leading-relaxed mb-4 line-clamp-2 ${
-                  isCyberpunk ? 'text-[#9060d0]' : 'text-white/50'
-                }`}>
-                  {n.summary}
-                </p>
-
-                {/* AI Intel Section — expanded result */}
-                {articleIntel[n.id] ? (
-                  <div className={`mb-4 p-3 text-[12px] font-roboto leading-relaxed whitespace-pre-wrap rounded-[10px] border ${
+                {/* AI Intel Section (preserved) */}
+                {articleIntel[n.id] && (
+                  <div className={`p-3 text-[12px] font-roboto leading-relaxed whitespace-pre-wrap rounded-[10px] border ${
                     isCyberpunk
                       ? 'border-[#00ffff]/30 bg-[#00ffff]/5 text-[#b0f0f0]'
                       : 'border-[#D8FE52]/20 bg-[#D8FE52]/5 text-[#D8FE52]/80'
@@ -694,88 +682,69 @@ export default function CICenter({ onInitializeSimulation, showSettings, setShow
                     </div>
                     <div dir="auto">{articleIntel[n.id]}</div>
                   </div>
-                ) : intelErrors[n.id] ? (
-                  <button
-                    onClick={() => handleGenerateIntel(n)}
-                    className="mb-4 flex items-center gap-2 h-[36px] px-4 border border-red-500/50 rounded-[10px] text-[12px] font-roboto text-red-400 hover:bg-red-500/10 hover:border-red-500 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    ⚠️ Retry AI Intel
-                  </button>
-                ) : (
-                  /* Generate AI Intel button — yellow bordered per Figma */
-                  <button
-                    onClick={() => handleGenerateIntel(n)}
-                    disabled={!!intelLoading[n.id]}
-                    className={`mb-4 flex items-center gap-2 h-[36px] px-4 border rounded-[10px] text-[12px] font-roboto transition-all duration-200 ${
-                      intelLoading[n.id]
-                        ? 'border-[rgba(216,254,82,0.5)] text-[rgba(216,254,82,0.75)] animate-pulse cursor-not-allowed'
-                        : isCyberpunk
-                          ? 'border-[#00ffff]/40 text-[#00ffff]/70 hover:border-[#00ffff] hover:text-[#00ffff]'
-                          : 'border-[rgba(216,254,82,0.5)] text-[rgba(216,254,82,0.75)] hover:bg-[rgba(216,254,82,0.08)] hover:border-[rgba(216,254,82,0.8)] hover:scale-[1.02] active:scale-[0.98]'
-                    }`}
-                  >
-                    {/* Sparkle / AI icon */}
-                    <svg
-                      width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                      className={intelLoading[n.id] ? 'animate-spin' : ''}
-                    >
-                      <path d="M12 2L13.09 8.26L19 7L14.74 11.26L21 12L14.74 12.74L19 17L13.09 15.74L12 22L10.91 15.74L5 17L9.26 12.74L3 12L9.26 11.26L5 7L10.91 8.26L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                    </svg>
-                    {intelLoading[n.id] ? 'Generating AI Intel...' : 'Generating AI Intel'}
-                  </button>
+                )}
+                {intelErrors[n.id] && (
+                  <div className="text-red-500 text-xs">⚠️ AI Intel Error. Try generating again.</div>
                 )}
 
-                {/* Action Buttons Row */}
-                <div className="flex items-center gap-3 flex-wrap">
-
-                  {/* ── Initialize Simulation — Primary yellow filled (Figma spec) ── */}
+                {/* Second div (Buttons) */}
+                <div className="w-fit h-fit flex flex-row gap-3 mt-2">
+                  {/* Button 1 */}
                   <button
                     onClick={() => handleSimulate(n)}
                     disabled={isSimulatingId !== null}
-                    className={`flex items-center gap-2 h-[38px] px-6 rounded-[10px] text-[14px] font-roboto font-medium transition-all duration-200 ${
+                    className={`w-fit h-fit flex items-center gap-[4px] px-[12px] py-[6px] rounded-[6px] transition-all group ${
                       isSimulatingId === n.id
-                        ? 'bg-[rgba(216,254,82,0.3)] text-[#D8FE52] cursor-not-allowed animate-pulse'
+                        ? 'bg-[#D8FE52]/30 text-[#D8FE52] cursor-not-allowed animate-pulse'
                         : isSimulatingId !== null
-                          ? 'bg-[rgba(216,254,82,0.15)] text-[#D8FE52]/40 cursor-not-allowed'
-                          : isCyberpunk
-                            ? 'bg-[rgba(255,0,255,0.3)] text-[#ff00ff] border border-[#ff00ff] hover:bg-[rgba(255,0,255,0.5)]'
-                            : 'bg-[rgba(216,254,82,0.5)] text-[#D8FE52] hover:bg-[rgba(216,254,82,0.65)] hover:scale-[1.03] active:scale-[0.97] shadow-[0_0_20px_rgba(216,254,82,0.15)] hover:shadow-[0_0_30px_rgba(216,254,82,0.3)]'
+                          ? 'bg-[#D8FE52]/15 text-[#D8FE52]/40 cursor-not-allowed'
+                          : 'bg-[#D8FE52]/50 hover:bg-[#A0B754] shadow-[0_0_10px_rgba(216,254,82,0)] hover:shadow-[0_0_10px_rgba(216,254,82,0.3)]'
                     }`}
                   >
-                    {isSimulatingId === n.id ? (
-                      <>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="animate-spin" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        Initialize Simulation
-                        <svg width="6" height="10" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M1 1L5 5L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </>
-                    )}
+                    <div className={`${isSimulatingId === n.id ? 'text-[#D8FE52]' : 'text-[#EBFFA5] group-hover:text-[#EBFFA5]'} ${isSimulatingId === n.id ? 'animate-spin' : ''}`}>
+                      <svg width="9" height="16" viewBox="0 0 9 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4.68896 0.509024C5.03361 -0.016145 5.73205 -0.158049 6.24901 0.192064C6.76598 0.542176 6.90567 1.2517 6.56102 1.77686L3.22669 6.85716H7.87498C8.28987 6.85716 8.67127 7.08934 8.86704 7.46094C9.06268 7.8325 9.0411 8.28331 8.81101 8.63392L4.31104 15.491C3.96639 16.0161 3.26795 16.158 2.75099 15.8079C2.23402 15.4578 2.09433 14.7483 2.43898 14.2231L5.77331 9.14284H1.12502C0.710126 9.14284 0.328729 8.91066 0.132959 8.53906C-0.0626784 8.1675 -0.0411032 7.71669 0.188989 7.36608L4.68896 0.509024Z" fill="currentColor"/>
+                      </svg>
+                    </div>
+                    <span className={`font-roboto font-medium text-[14px] ${isSimulatingId === n.id ? 'text-[#D8FE52]' : 'text-[#D8FE52] group-hover:text-white'}`}>
+                      {isSimulatingId === n.id ? 'Generating...' : 'Initialize Simulation'}
+                    </span>
                   </button>
 
-                  {/* ── Read Source — Gray bordered (Figma spec) ── */}
+                  {/* Button 2 */}
+                  <button
+                    onClick={() => handleGenerateIntel(n)}
+                    disabled={!!intelLoading[n.id]}
+                    className={`w-fit h-fit flex items-center gap-[4px] px-[12px] py-[6px] rounded-[6px] border border-[#D8FE52]/50 bg-transparent transition-all group ${
+                      intelLoading[n.id] ? 'animate-pulse cursor-not-allowed' : 'hover:border-[#D8FE52]/50 hover:bg-[#D8FE52]/10'
+                    }`}
+                  >
+                    <div className={`${intelLoading[n.id] ? 'animate-spin text-[#D8FE52]' : 'text-[#D8FE52]/50 group-hover:text-[#D8FE52]'}`}>
+                      <svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0.744208 10.2057L2.87907 11.1051L3.73049 13.2366C3.91449 13.6983 4.36135 14 4.85849 14C5.35564 14 5.80135 13.6971 5.98649 13.2366L6.83335 11.1177L8.95221 10.2708C9.41392 10.0868 9.71564 9.63999 9.71564 9.14285C9.71564 8.64571 9.41278 8.19999 8.95221 8.01485L6.83335 7.16799L5.98649 5.04913C5.80021 4.58856 5.35335 4.28571 4.85735 4.28571C4.36135 4.28571 3.91449 4.58856 3.72935 5.04913L2.88707 7.15542L0.784208 7.95199C0.320208 8.12799 0.00934957 8.56913 0.000206713 9.06513C-0.00893614 9.56228 0.285923 10.0137 0.743066 10.2068L0.744208 10.2057Z" fill="currentColor"/>
+                        <path d="M9.66807 4.17882L11.1748 4.81371L11.7757 6.31825C11.9056 6.64417 12.221 6.85714 12.5719 6.85714C12.9227 6.85714 13.2373 6.64336 13.368 6.31825L13.9657 4.82259L15.4611 4.22481C15.787 4.09492 16 3.7795 16 3.42857C16 3.07765 15.7862 2.76303 15.4611 2.63234L13.9657 2.03455L13.368 0.538891C13.2365 0.213782 12.9211 0 12.5711 0C12.221 0 11.9056 0.213782 11.7749 0.538891L11.1805 2.02568L9.6963 2.58797C9.36882 2.7122 9.14942 3.0236 9.14297 3.37371C9.13652 3.72464 9.34462 4.04329 9.66727 4.17963L9.66807 4.17882Z" fill="currentColor"/>
+                      </svg>
+                    </div>
+                    <span className="font-roboto font-normal text-[14px] text-[#D8FE52]/75">
+                      {intelLoading[n.id] ? 'Generating...' : 'Generate AI Intel'}
+                    </span>
+                  </button>
+
+                  {/* Button 3 */}
                   <a
                     href={n.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex items-center gap-2 h-[36px] px-4 border rounded-[10px] text-[12px] font-roboto transition-all duration-200 ${
-                      isCyberpunk
-                        ? 'border-[#00ffff]/40 text-[#00ffff]/60 hover:text-[#00ffff] hover:border-[#00ffff]'
-                        : 'border-[rgba(177,177,177,0.5)] text-[rgba(177,177,177,0.5)] hover:text-[rgba(177,177,177,0.9)] hover:border-[rgba(177,177,177,0.8)] hover:scale-[1.02] active:scale-[0.98]'
-                    }`}
+                    className="w-fit h-fit flex items-center gap-[4px] px-[12px] py-[6px] rounded-[6px] border border-[#B1B1B1]/50 bg-transparent hover:bg-white/5 transition-all group"
                   >
-                    <svg width="13" height="13" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M13.3333 5.5L18.3333 10.5L13.3333 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M6.66667 5.5L1.66667 10.5L6.66667 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M11.6667 3.83331L8.33333 17.1666" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    Read Source
+                    <div className="text-white/25 group-hover:text-white/[0.45]">
+                      <svg width="16" height="13" viewBox="0 0 16 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.82014 0.0318365C9.39511 -0.0925519 8.95257 0.158763 8.83006 0.590313L5.62981 11.9629C5.50731 12.3945 5.75482 12.8438 6.17986 12.9682C6.60489 13.0926 7.04742 12.8412 7.16994 12.4097L10.3702 1.03709C10.4927 0.605542 10.2452 0.156225 9.82014 0.0318365ZM11.8353 3.08061C11.5228 3.39792 11.5228 3.91324 11.8353 4.23056L14.068 6.5L11.8328 8.76944C11.5203 9.08676 11.5203 9.60208 11.8328 9.91939C12.1453 10.2367 12.6529 10.2367 12.9654 9.91939L15.7656 7.07624C16.0781 6.75893 16.0781 6.24361 15.7656 5.92629L12.9654 3.08314C12.6529 2.76583 12.1453 2.76583 11.8328 3.08314L11.8353 3.08061ZM4.1672 3.08061C3.85468 2.76329 3.34714 2.76329 3.03461 3.08061L0.234392 5.92376C-0.0781307 6.24107 -0.0781307 6.75639 0.234392 7.07371L3.03461 9.91685C3.34714 10.2342 3.85468 10.2342 4.1672 9.91685C4.47973 9.59954 4.47972 9.08422 4.1672 8.7669L1.93202 6.5L4.1672 4.23056C4.47972 3.91324 4.47972 3.39792 4.1672 3.08061Z" fill="currentColor"/>
+                      </svg>
+                    </div>
+                    <span className="font-roboto font-normal text-[14px] text-[#B1B1B1]/50">
+                      Read Source
+                    </span>
                   </a>
                 </div>
               </div>
