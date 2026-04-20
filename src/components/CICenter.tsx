@@ -7,22 +7,27 @@ import { Scenario } from '../lib/scenarioData';
 
 interface CICenterProps {
   onInitializeSimulation?: (headline: string, scenario?: any) => void;
+  showSettings: boolean;
+  setShowSettings: (v: boolean | ((prev: boolean) => boolean)) => void;
+  ciActiveTab: 'feed' | 'assistant';
+  setCiActiveTab: (v: 'feed' | 'assistant') => void;
+  onSensorsCountChange?: (count: number) => void;
 }
 
 
 
-export default function CICenter({ onInitializeSimulation }: CICenterProps) {
+export default function CICenter({ onInitializeSimulation, showSettings, setShowSettings, ciActiveTab, setCiActiveTab, onSensorsCountChange }: CICenterProps) {
   const { isCyberpunk } = useTheme();
   
-  // Tab State
-  const [activeTab, setActiveTab] = useState<'feed' | 'assistant'>('feed');
+  // Use prop as the active tab
+  const activeTab = ciActiveTab;
 
   // Chat History / Arrow Keys
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
   // Settings / Source Toggles
-  const [showSettings, setShowSettings] = useState(false);
+  // showSettings and selectedSources lifted; only local toggle state remains
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [customSources, setCustomSources] = useState<{ id: string; name: string; url: string }[]>([]);
   const [isSimulatingId, setIsSimulatingId] = useState<string | null>(null);
@@ -95,6 +100,8 @@ export default function CICenter({ onInitializeSimulation }: CICenterProps) {
     // the resolved values so we don't wait for a re-render + state update.
     sourcesReady.current = true;
     fetchNewsWithSources(resolvedSources, resolvedCustom);
+    // Emit count to parent
+    onSensorsCountChange?.(resolvedSources.length);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -104,6 +111,8 @@ export default function CICenter({ onInitializeSimulation }: CICenterProps) {
     localStorage.setItem('ci_selected_sources', JSON.stringify(selectedSources));
     localStorage.setItem('ci_custom_sources', JSON.stringify(customSources));
     fetchNews();
+    // Emit updated count to parent
+    onSensorsCountChange?.(selectedSources.length);
   }, [selectedSources, customSources]);
 
   const fetchNewsWithSources = async (sources: string[], custom: { id: string; name: string; url: string }[]) => {
@@ -241,8 +250,8 @@ export default function CICenter({ onInitializeSimulation }: CICenterProps) {
     setIsAnalystLoading(true);
 
     // Auto-switch to Assistant tab if not already there
-    if (activeTab !== 'assistant') {
-      setActiveTab('assistant');
+    if (ciActiveTab !== 'assistant') {
+      setCiActiveTab('assistant');
     }
 
     try {
@@ -423,7 +432,7 @@ export default function CICenter({ onInitializeSimulation }: CICenterProps) {
 
         <div className={`p-4 border-b ${isCyberpunk ? 'border-[#00ffff]/20 bg-black/40' : 'border-neutral-800 bg-neutral-900/50'}`}>
           <div className={`text-[10px] uppercase font-bold mb-1 opacity-60 ${isCyberpunk ? 'text-[#00ffff]' : 'text-emerald-400'}`}>TTP Extraction Complete</div>
-          <div className={`text-sm font-bold ${isCyberpunk ? 'text-[#e8d5ff]' : 'text-neutral-200'}`}>{activeSimArticle.title}</div>
+          <div dir="auto" className={`text-sm font-bold ${isCyberpunk ? 'text-[#e8d5ff]' : 'text-neutral-200'}`}>{activeSimArticle.title}</div>
         </div>
 
         {/* Sim Chat Log */}
@@ -441,7 +450,7 @@ export default function CICenter({ onInitializeSimulation }: CICenterProps) {
                 <div className="text-[10px] uppercase font-bold mb-1 opacity-50">
                   {entry.role === 'dm' ? 'System Console' : 'Analyst'}
                 </div>
-                <div className="whitespace-pre-wrap">{entry.text}</div>
+                <div dir="auto" className="whitespace-pre-wrap">{entry.text}</div>
               </div>
             </div>
           ))}
@@ -481,57 +490,10 @@ export default function CICenter({ onInitializeSimulation }: CICenterProps) {
     );
   }
 
-  // ── TAB UI (main Himinbjörg view) ──────────────────────────────────────────
-  const tabBase = `text-[10px] uppercase font-bold tracking-widest px-4 py-2 transition-all border-b-2`;
-  const tabActive = isCyberpunk
-    ? 'border-[#ff00ff] text-[#ff00ff]'
-    : 'border-emerald-500 text-emerald-400';
-  const tabInactive = isCyberpunk
-    ? 'border-transparent text-[#9060d0] hover:text-[#e8d5ff]'
-    : 'border-transparent text-neutral-500 hover:text-neutral-300';
+  // ── MAIN VIEW ─────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col h-full w-full">
-
-      {/* ── Tab Bar ── */}
-      <div className={`shrink-0 flex items-center justify-between px-2 border-b ${
-        isCyberpunk ? 'border-[#ff00ff]/30 bg-black/40' : 'border-neutral-800 bg-neutral-900/40'
-      }`}>
-        <div className="flex">
-          <button
-            onClick={() => setActiveTab('feed')}
-            className={`${tabBase} ${activeTab === 'feed' ? tabActive : tabInactive}`}
-          >
-            Himinbjörg
-          </button>
-          <button
-            onClick={() => setActiveTab('assistant')}
-            className={`${tabBase} ${activeTab === 'assistant' ? tabActive : tabInactive}`}
-          >
-            Heimdall
-          </button>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {activeTab === 'feed' && (
-            <>
-              <button 
-                onClick={() => setShowSettings(!showSettings)}
-                className={`text-[9px] uppercase font-bold px-3 py-1 transition-colors ${
-                  isCyberpunk 
-                    ? 'text-[#00ffff] hover:text-[#ff00ff]' 
-                    : 'text-neutral-400 hover:text-emerald-500'
-                }`}
-              >
-                [ {showSettings ? 'CLOSE SETTINGS' : 'MANAGE SOURCES'} ]
-              </button>
-              <span className="text-[9px] uppercase tracking-widest opacity-60 px-2 font-mono whitespace-nowrap">
-                Sensors: {selectedSources.length} Active
-              </span>
-            </>
-          )}
-        </div>
-      </div>
 
       {/* ── Settings Panel (feed tab only) ── */}
       {activeTab === 'feed' && showSettings && (
@@ -673,98 +635,146 @@ export default function CICenter({ onInitializeSimulation }: CICenterProps) {
           ) : (
             news.map((n) => (
               <div key={n.id}
-                className={`relative overflow-hidden transition-colors p-4 ${
+                className={`relative overflow-hidden transition-all duration-300 p-5 group ${
                   isCyberpunk
                     ? 'bg-[rgba(12,0,28,0.97)]'
-                    : 'border border-neutral-800 bg-neutral-950/50 hover:bg-neutral-900/60 rounded-xl'
+                    : 'bg-[#141414] border border-white/[0.05] rounded-[20px] hover:border-white/10 hover:bg-[#171717]'
                 }`}
                 style={isCyberpunk ? {
-                  borderLeft: `3px solid ${isCyberpunk ? '#00ffff' : '#10b981'}`,
+                  borderLeft: `3px solid #00ffff`,
                   borderTop: '1px solid rgba(255,0,255,0.25)',
                   borderRight: '1px solid rgba(255,0,255,0.25)',
                   borderBottom: '1px solid rgba(255,0,255,0.25)',
                 } : {}}>
 
-                <div className="flex justify-between items-start mb-2">
-                  <span className={`text-[10px] font-mono ${isCyberpunk ? 'text-[#9060d0]' : 'text-neutral-500'}`}>
-                    {n.sourceName}
-                  </span>
-                  <span className={`text-[9px] font-bold tracking-widest px-1.5 py-0.5 border ${
-                    isCyberpunk 
-                      ? 'border-[#00ffff]/40 text-[#00ffff]' 
-                      : 'border-emerald-500/20 text-emerald-400 rounded'
+                {/* Source + Live badge */}
+                <div className="flex justify-between items-center mb-3">
+                  <div className="flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-35 shrink-0">
+                      <path d="M13.3333 5.5L18.3333 10.5L13.3333 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M6.66667 5.5L1.66667 10.5L6.66667 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M11.6667 3.83331L8.33333 17.1666" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span className={`text-[12px] font-roboto ${isCyberpunk ? 'text-[#9060d0]' : 'text-white/35'}`}>
+                      {n.sourceName}
+                    </span>
+                  </div>
+                  <span className={`text-[9px] font-bold tracking-widest px-2 py-0.5 rounded-[4px] border ${
+                    isCyberpunk
+                      ? 'border-[#00ffff]/40 text-[#00ffff] animate-pulse'
+                      : 'border-[#00FF67]/40 text-[#00FF67] bg-[#00FF67]/5 animate-pulse'
                   }`}>
                     LIVE
                   </span>
                 </div>
 
-                 <h3 className="font-bold mb-1.5"
-                  style={isCyberpunk ? { fontSize: '11px', letterSpacing: '0.04em', color: '#e8d5ff' } : { color: '#e5e5e5', fontSize: '14px' }}>
+                {/* Title */}
+                <h3 dir="auto" className={`font-orbitron font-semibold mb-2 leading-snug ${
+                  isCyberpunk ? 'text-[11px] text-[#e8d5ff]' : 'text-[16px] text-white'
+                }`}>
                   {n.title}
                 </h3>
 
-                <p className={`text-xs leading-relaxed mb-3 font-mono line-clamp-2 ${isCyberpunk ? 'text-[#9060d0]' : 'text-neutral-400'}`}>
+                {/* Summary */}
+                <p dir="auto" className={`text-[14px] font-roboto leading-relaxed mb-4 line-clamp-2 ${
+                  isCyberpunk ? 'text-[#9060d0]' : 'text-white/50'
+                }`}>
                   {n.summary}
                 </p>
 
-                {/* AI Intel Section */}
+                {/* AI Intel Section — expanded result */}
                 {articleIntel[n.id] ? (
-                  <div className={`mb-3 p-2.5 text-[11px] font-mono leading-relaxed whitespace-pre-wrap border ${
+                  <div className={`mb-4 p-3 text-[12px] font-roboto leading-relaxed whitespace-pre-wrap rounded-[10px] border ${
                     isCyberpunk
                       ? 'border-[#00ffff]/30 bg-[#00ffff]/5 text-[#b0f0f0]'
-                      : 'border-emerald-500/20 bg-emerald-950/20 text-emerald-300 rounded-lg'
+                      : 'border-[#D8FE52]/20 bg-[#D8FE52]/5 text-[#D8FE52]/80'
                   }`}>
-                    <div className={`text-[9px] uppercase font-bold mb-1.5 opacity-60 ${isCyberpunk ? 'text-[#00ffff]' : 'text-emerald-400'}`}>
+                    <div className="text-[10px] uppercase font-bold mb-1.5 opacity-60 tracking-widest">
                       ⚡ AI Intel Analysis
                     </div>
-                    {articleIntel[n.id]}
+                    <div dir="auto">{articleIntel[n.id]}</div>
                   </div>
                 ) : intelErrors[n.id] ? (
                   <button
                     onClick={() => handleGenerateIntel(n)}
-                    className={`mb-3 text-[9px] font-bold uppercase tracking-wider px-3 py-1 border transition-all ${
-                      isCyberpunk 
-                        ? 'border-red-500 text-red-500 hover:bg-red-500 hover:text-white' 
-                        : 'border-red-500/50 text-red-400 hover:bg-red-500/20'
-                    }`}
+                    className="mb-4 flex items-center gap-2 h-[36px] px-4 border border-red-500/50 rounded-[10px] text-[12px] font-roboto text-red-400 hover:bg-red-500/10 hover:border-red-500 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     ⚠️ Retry AI Intel
                   </button>
                 ) : (
+                  /* Generate AI Intel button — yellow bordered per Figma */
                   <button
                     onClick={() => handleGenerateIntel(n)}
                     disabled={!!intelLoading[n.id]}
-                    className={`mb-3 text-[9px] font-bold uppercase tracking-wider px-3 py-1 border transition-all ${
+                    className={`mb-4 flex items-center gap-2 h-[36px] px-4 border rounded-[10px] text-[12px] font-roboto transition-all duration-200 ${
                       intelLoading[n.id]
-                        ? (isCyberpunk ? 'border-[#00ffff]/30 text-[#00ffff]/40 animate-pulse' : 'border-emerald-500/20 text-emerald-500/40 animate-pulse')
-                        : (isCyberpunk ? 'border-[#00ffff]/40 text-[#00ffff]/70 hover:border-[#00ffff] hover:text-[#00ffff]' : 'border-emerald-500/20 text-emerald-500/60 hover:border-emerald-500 hover:text-emerald-400 rounded')
+                        ? 'border-[rgba(216,254,82,0.5)] text-[rgba(216,254,82,0.75)] animate-pulse cursor-not-allowed'
+                        : isCyberpunk
+                          ? 'border-[#00ffff]/40 text-[#00ffff]/70 hover:border-[#00ffff] hover:text-[#00ffff]'
+                          : 'border-[rgba(216,254,82,0.5)] text-[rgba(216,254,82,0.75)] hover:bg-[rgba(216,254,82,0.08)] hover:border-[rgba(216,254,82,0.8)] hover:scale-[1.02] active:scale-[0.98]'
                     }`}
                   >
-                    {intelLoading[n.id] ? '⚡ Extracting Intel...' : '⚡ Generate AI Intel'}
+                    {/* Sparkle / AI icon */}
+                    <svg
+                      width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                      className={intelLoading[n.id] ? 'animate-spin' : ''}
+                    >
+                      <path d="M12 2L13.09 8.26L19 7L14.74 11.26L21 12L14.74 12.74L19 17L13.09 15.74L12 22L10.91 15.74L5 17L9.26 12.74L3 12L9.26 11.26L5 7L10.91 8.26L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                    </svg>
+                    {intelLoading[n.id] ? 'Generating AI Intel...' : 'Generating AI Intel'}
                   </button>
                 )}
 
-                <div className="flex gap-2">
-                  <button 
+                {/* Action Buttons Row */}
+                <div className="flex items-center gap-3 flex-wrap">
+
+                  {/* ── Initialize Simulation — Primary yellow filled (Figma spec) ── */}
+                  <button
                     onClick={() => handleSimulate(n)}
                     disabled={isSimulatingId !== null}
-                    className={`text-[9px] font-bold uppercase tracking-wider px-3 py-1 border transition-all ${
+                    className={`flex items-center gap-2 h-[38px] px-6 rounded-[10px] text-[14px] font-roboto font-medium transition-all duration-200 ${
                       isSimulatingId === n.id
-                        ? (isCyberpunk ? 'border-[#00ffff] bg-[#00ffff]/20 animate-pulse' : 'border-emerald-500 bg-emerald-500/20')
-                        : (isCyberpunk ? 'border-[#ff00ff] text-[#ff00ff] hover:bg-[#ff00ff] hover:text-[#060010]' : 'border-emerald-500/20 text-emerald-400 rounded hover:bg-emerald-600/20')
+                        ? 'bg-[rgba(216,254,82,0.3)] text-[#D8FE52] cursor-not-allowed animate-pulse'
+                        : isSimulatingId !== null
+                          ? 'bg-[rgba(216,254,82,0.15)] text-[#D8FE52]/40 cursor-not-allowed'
+                          : isCyberpunk
+                            ? 'bg-[rgba(255,0,255,0.3)] text-[#ff00ff] border border-[#ff00ff] hover:bg-[rgba(255,0,255,0.5)]'
+                            : 'bg-[rgba(216,254,82,0.5)] text-[#D8FE52] hover:bg-[rgba(216,254,82,0.65)] hover:scale-[1.03] active:scale-[0.97] shadow-[0_0_20px_rgba(216,254,82,0.15)] hover:shadow-[0_0_30px_rgba(216,254,82,0.3)]'
                     }`}
                   >
-                    {isSimulatingId === n.id ? 'Generating Scenario...' : 'Initialize Simulation'}
+                    {isSimulatingId === n.id ? (
+                      <>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="animate-spin" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        Initialize Simulation
+                        <svg width="6" height="10" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M1 1L5 5L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </>
+                    )}
                   </button>
-                  <a 
+
+                  {/* ── Read Source — Gray bordered (Figma spec) ── */}
+                  <a
                     href={n.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`text-[9px] font-bold uppercase tracking-wider px-3 py-1 border transition-colors ${
-                    isCyberpunk
-                      ? 'border-[#00ffff]/40 text-[#00ffff]/60 hover:text-[#00ffff] hover:border-[#00ffff]'
-                      : 'border-neutral-800 text-neutral-500 hover:text-neutral-300'
-                  }`}>
+                    className={`flex items-center gap-2 h-[36px] px-4 border rounded-[10px] text-[12px] font-roboto transition-all duration-200 ${
+                      isCyberpunk
+                        ? 'border-[#00ffff]/40 text-[#00ffff]/60 hover:text-[#00ffff] hover:border-[#00ffff]'
+                        : 'border-[rgba(177,177,177,0.5)] text-[rgba(177,177,177,0.5)] hover:text-[rgba(177,177,177,0.9)] hover:border-[rgba(177,177,177,0.8)] hover:scale-[1.02] active:scale-[0.98]'
+                    }`}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M13.3333 5.5L18.3333 10.5L13.3333 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M6.66667 5.5L1.66667 10.5L6.66667 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M11.6667 3.83331L8.33333 17.1666" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                     Read Source
                   </a>
                 </div>

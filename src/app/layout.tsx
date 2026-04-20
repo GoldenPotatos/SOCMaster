@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fira_Code, Orbitron, JetBrains_Mono } from "next/font/google";
+import { Fira_Code, Orbitron, JetBrains_Mono, Roboto } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -8,6 +8,7 @@ import { ThemeBackgrounds } from "@/components/ThemeBackgrounds";
 const firaCode = Fira_Code({ subsets: ["latin"], variable: "--font-fira-code" });
 const orbitron = Orbitron({ subsets: ["latin"], variable: "--font-orbitron", weight: ["400","600","700","800","900"] });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
+const roboto = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-roboto" });
 
 export const metadata: Metadata = {
   title: "SOCMASTER | Cybersecurity Training",
@@ -21,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${firaCode.variable} ${orbitron.variable} ${jetbrainsMono.variable} h-[100dvh] antialiased bg-transparent overflow-hidden`}>
+      <body className={`${firaCode.variable} ${orbitron.variable} ${jetbrainsMono.variable} ${roboto.variable} h-[100dvh] antialiased bg-transparent overflow-hidden`}>
         <ThemeProvider>
           <ThemeBackgrounds />
           <AuthProvider>

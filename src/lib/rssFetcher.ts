@@ -19,7 +19,7 @@ export const AVAILABLE_SOURCES: NewsSource[] = [
   {
     id: 'erez_dasa',
     name: 'CyberSecurityIL (Erez Dasa)',
-    url: 'https://rsshub.app/telegram/channel/CyberSecurityIL'
+    url: 'https://t.me/s/CyberSecurityIL'
   },
   {
     id: 'bleeping',
@@ -44,39 +44,21 @@ export const AVAILABLE_SOURCES: NewsSource[] = [
   {
     id: 'incd',
     name: 'Israel National Cyber Directorate (INCD)',
-    url: 'https://www.gov.il/he/departments/news/cyber_directorate/RSS'
+    url: 'https://www.gov.il/en/departments/israel_national_cyber_directorate/RSS'
   },
   {
     id: 'reddit_netsec',
     name: 'Reddit /r/netsec',
-    url: 'https://www.reddit.com/r/netsec/top.json?t=day&limit=10'
+    url: 'https://www.reddit.com/r/netsec/hot.json?limit=10'
   },
   {
     id: 'reddit_cybersec',
     name: 'Reddit /r/cybersecurity',
-    url: 'https://www.reddit.com/r/cybersecurity/top.json?t=day&limit=10'
+    url: 'https://www.reddit.com/r/cybersecurity/hot.json?limit=10'
   }
 ];
 
-// Sources that are blocked by CORS, government firewalls, or Cloudflare and must
-// be fetched server-side via our /api/proxy-rss route with spoofed browser headers.
-const PROXIED_SOURCE_IDS = new Set(['incd', 'erez_dasa']);
-
-// Base URL for internal API calls (server-side requires absolute URL)
-const INTERNAL_API_BASE =
-  process.env.NEXT_PUBLIC_BASE_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-
-/**
- * Returns the URL to use when fetching an RSS feed.
- * Blocked sources are routed through our server-side proxy.
- */
-function resolveRssUrl(source: NewsSource, forceProxy = false): string {
-  if (forceProxy || PROXIED_SOURCE_IDS.has(source.id)) {
-    return `${INTERNAL_API_BASE}/api/proxy-rss?url=${encodeURIComponent(source.url)}`;
-  }
-  return source.url;
-}
+// No proxy used anymore since we bypass naturally.
 
 // rss-parser instance with spoofed browser headers for direct fetches
 const parser = new Parser({
@@ -90,6 +72,35 @@ const parser = new Parser({
 
 const REDDIT_SOURCE_IDS = ['reddit_netsec', 'reddit_cybersec'];
 
+async function fetchTelegramSource(source: NewsSource): Promise<NewsItem[]> {
+  const res = await fetch(source.url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36' }
+  });
+  if (!res.ok) throw Object.assign(new Error(`Telegram fetch failed: ${res.status}`), { status: res.status });
+  
+  const text = await res.text();
+  // We extract the public channel messages from the HTML using regex
+  const regex = /<div class="tgme_widget_message_text[^>]*>([\s\S]*?)<\/div>/g;
+  const messages = [];
+  let match;
+  
+  while ((match = regex.exec(text)) !== null) {
+    // Strip HTML tags for clean summary
+    const cleanText = match[1].replace(/<br\/?>/g, '\n').replace(/<[^>]+>/g, '').trim();
+    messages.push(cleanText);
+  }
+  
+  // Return the last 5 messages, reversed so newest is first
+  return messages.slice(-5).reverse().map((msg, i) => ({
+    id: `tg_${Date.now()}_${i}`,
+    title: msg.length > 50 ? msg.substring(0, 50) + '...' : msg,
+    summary: msg,
+    sourceName: source.name,
+    link: source.url,
+    isoDate: new Date(Date.now() - i * 60000).toISOString() // Fake recent dates to sort them on top
+  }));
+}
+
 async function fetchRedditSource(source: NewsSource): Promise<NewsItem[]> {
   const res = await fetch(source.url, {
     headers: {
@@ -100,7 +111,7 @@ async function fetchRedditSource(source: NewsSource): Promise<NewsItem[]> {
   const json = await res.json();
   const posts: any[] = json?.data?.children?.map((c: any) => c.data) || [];
   return posts
-    .filter((p: any) => (p.ups ?? 0) >= 100 && !p.stickied)
+    .filter((p: any) => !p.stickied)
     .slice(0, 10)
     .map((p: any) => ({
       id: p.id || Math.random().toString(36).substr(2, 9),
@@ -132,9 +143,12 @@ export async function getLatestCyberNews(selectedSourceIds: string[], customSour
         let fetchUrl = source.url;
         if (fetchUrl.startsWith('reddit:')) {
           const sub = fetchUrl.replace('reddit:', '');
-          fetchUrl = `https://www.reddit.com/r/${sub}/top.json?t=day&limit=10`;
+          fetchUrl = `https://www.reddit.com/r/${sub}/hot.json?limit=10`;
         } else if (fetchUrl.includes('reddit.com/r/') && !fetchUrl.includes('.json')) {
-          fetchUrl = fetchUrl.split('?')[0].replace(/\/$/, '') + '.json?t=day&limit=10';
+          fetchUrl = fetchUrl.split('?')[0].replace(/\/$/, '') + '.json?limit=10';
+          if (fetchUrl.includes('/top.json')) {
+             fetchUrl = fetchUrl.replace('/top.json', '/hot.json');
+          }
         }
 
         const items = await fetchRedditSource({ ...source, url: fetchUrl });
@@ -142,20 +156,19 @@ export async function getLatestCyberNews(selectedSourceIds: string[], customSour
         return items;
       }
 
-      // For all other RSS sources, resolve through proxy if needed
-      const fetchUrl = resolveRssUrl(source);
+      // Check if it's a Telegram source
+      if (source.id === 'erez_dasa' || source.url.includes('t.me/s/')) {
+        const items = await fetchTelegramSource(source);
+        sourceStatuses[source.id] = 200;
+        return items;
+      }
+
+      // Standard RSS fetch
       let feed;
       try {
-        feed = await parser.parseURL(fetchUrl);
+        feed = await parser.parseURL(source.url);
       } catch (e) {
-        // Fallback: if the erez_dasa primary URL fails, try the alternate rsshub path via proxy
-        if (source.id === 'erez_dasa') {
-          console.warn(`Primary feed for ${source.name} failed, trying fallback...`);
-          const fallbackUrl = resolveRssUrl({ ...source, url: 'https://rsshub.app/telegram/channel/CyberSecurityIL?filterout=JOIN' }, true);
-          feed = await parser.parseURL(fallbackUrl);
-        } else {
-          throw e;
-        }
+        throw e;
       }
       
       if (!feed || !feed.items) return [];
